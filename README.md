@@ -1,10 +1,15 @@
 # removepii.co.uk
 
+[![CI](https://github.com/Product-nomad/removepii.co.uk/actions/workflows/ci.yml/badge.svg)](https://github.com/Product-nomad/removepii.co.uk/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![Python: ≥3.12](https://img.shields.io/badge/python-%E2%89%A53.12-green.svg)](./pyproject.toml)
 
-**GDPR-grade document redactor with a zero-persistence architecture for document content.** Paste text or upload a `.txt` file, get it back with UK PII (phones, NHS numbers, emails, postcodes, addresses, National Insurance numbers, names) redacted — processed in-memory, never written to disk.
+**GDPR-grade UK document redactor with a zero-persistence architecture for document content.** Paste text or upload a `.txt` file, get it back with UK PII (phones, NHS numbers, emails, postcodes, addresses, National Insurance numbers, names) redacted — processed in-memory, never written to disk.
 
 Live at <https://removepii.co.uk>.
+
+> v0.1 — demo site. Four demo license keys in `clients.json`; do **not** submit real personal data.
+> **CPMAI phase VI — Operationalization** (Phase V debt: no golden-set accuracy metric yet, no LLM eval). See [Governance](#governance) below.
 
 ## Architecture
 
@@ -138,7 +143,55 @@ removepii/
 
 ## Security
 
-See `SECURITY.md` for how to report a vulnerability.
+See `SECURITY.md` for how to report a vulnerability and `THREAT_MODEL.md` for what the tool defends against and what it doesn't.
+
+## Governance
+
+This project follows the working principles at [`~/WAYS_OF_WORKING.md`](../../WAYS_OF_WORKING.md) and the PMI CPMAI methodology.
+
+### CPMAI phase: VI (Operationalization, with Phase V debt)
+
+| Phase | Status | Artefact |
+|---|---|---|
+| I. Business Understanding | ✅ complete | `THREAT_MODEL.md`, this README |
+| II. Data Understanding | ✅ complete | UK PII taxonomy documented in `backend.py` |
+| III. Data Preparation | ✅ complete | `UK_PATTERNS` regex table |
+| IV. Model Development | ✅ complete | Hybrid regex + local-LLM pipeline |
+| V. Model Evaluation | 🟡 partial | 7 regex unit tests (LLM mocked); **no golden-set accuracy measurement** |
+| VI. Model Operationalization | ✅ live | Cloudflare Tunnel + systemd on home VPC; auto-restart; 4 redundant edge connections |
+
+### Value metrics (next to measure)
+
+1. **Precision on a planted golden set** — detects ≥ 95% of the seeded PII entities. Current: unmeasured.
+2. **Uptime** — ≥ 99% monthly, measured from Cloudflare analytics. Current: live since 2026-04-24.
+3. **Redaction latency p95** — ≤ 5s for a 1-page CV. Current: unmeasured.
+
+### Ethical posture
+
+- Privacy-by-default: local LLM, no external API, document content never on disk.
+- Transparency: OSS under MIT, `THREAT_MODEL.md` explicitly lists known gaps.
+- Data minimisation: connection metrics only; feedback is opt-in.
+- Honest claims: Privacy Policy (`pages/Privacy_Policy.py`) acknowledges the metric ledger rather than claiming "zero disk writes."
+
+### Known gaps
+
+- London landline phone regex gap — see `THREAT_MODEL.md`.
+- LLM fail-open on errors — see `DECISIONS.md`.
+- API subdomain (`api.removepii.co.uk`) not live.
+
+### Drift monitoring (planned)
+
+- Weekly run against a frozen golden set; alert on precision drop.
+- Alert if PII patterns matched per 1k characters deviates > 3σ from baseline.
+
+## Roadmap
+
+- Add a golden red-team fixture set and measure detection accuracy.
+- Fix the London-landline regex gap.
+- Decide LLM fail-open policy (see `DECISIONS.md`) and implement.
+- PDF / DOCX support.
+- Restore the API subdomain.
+- Hash license keys and add per-client expiry when leaving demo posture.
 
 ## License
 

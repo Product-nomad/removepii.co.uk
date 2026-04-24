@@ -12,7 +12,7 @@ feedback log are written as plain CSVs for billing and support; see README.
 import csv
 import os
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -44,12 +44,8 @@ def log_usage(action_type: str, char_count: int, client_name: str) -> None:
         with USAGE_LOG.open("a", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             if new_file:
-                writer.writerow(
-                    ["Timestamp", "Client", "Action", "Character_Count"]
-                )
-            writer.writerow(
-                [datetime.now(timezone.utc).isoformat(), client_name, action_type, char_count]
-            )
+                writer.writerow(["Timestamp", "Client", "Action", "Character_Count"])
+            writer.writerow([datetime.now(UTC).isoformat(), client_name, action_type, char_count])
     except Exception as e:
         print(f"Logging Error: {e}")
 
@@ -62,7 +58,7 @@ def log_feedback(contact: str, message: str) -> bool:
             writer = csv.writer(f)
             if new_file:
                 writer.writerow(["Timestamp", "Contact", "Message"])
-            writer.writerow([datetime.now(timezone.utc).isoformat(), contact, message])
+            writer.writerow([datetime.now(UTC).isoformat(), contact, message])
         print(f"📝 New Feedback Logged: {message}")
         return True
     except Exception as e:
@@ -133,10 +129,10 @@ def scrub_text_hybrid(
 
     system_prompt = f"""You are a GDPR Redaction Engine.
 RULES:
-0. If you find an NHS Number, replace it with {get_tag('NHS', redaction_style)}.
-1. If you find a Name, replace it with {get_tag('NAME', redaction_style)}.
-2. If you find an Address, replace it with {get_tag('ADDRESS', redaction_style)}.
-3. If you find a Phone Number, replace it with {get_tag('PHONE', redaction_style)}.
+0. If you find an NHS Number, replace it with {get_tag("NHS", redaction_style)}.
+1. If you find a Name, replace it with {get_tag("NAME", redaction_style)}.
+2. If you find an Address, replace it with {get_tag("ADDRESS", redaction_style)}.
+3. If you find a Phone Number, replace it with {get_tag("PHONE", redaction_style)}.
 4. Output ONLY the processed text. Do not add comments.
 5. DO NOT change existing tags like [NHS-REDACTED].
 """

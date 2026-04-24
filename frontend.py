@@ -159,27 +159,25 @@ else:
         with btn_col:
             do_process = st.button("Anonymise Text", type="primary")
 
-        with feedback_col:
-            with st.popover("Did it work?"):
-                st.markdown("**Report an Issue**")
-                with st.form("feedback_form_inline", clear_on_submit=True):
-                    fb_msg = st.text_area("What happened?", height=100)
-                    fb_email = st.text_input("Your Email (Optional)")
-                    if st.form_submit_button("Send Report"):
-                        if fb_msg:
-                            try:
-                                payload = {"message": fb_msg, "contact": fb_email}
-                                requests.post(
-                                    os.getenv(
-                                        "FEEDBACK_URL",
-                                        "http://127.0.0.1:8000/v1/feedback",
-                                    ),
-                                    json=payload,
-                                    timeout=5,
-                                )
-                                st.toast("✅ Feedback sent!")
-                            except Exception:
-                                st.error("Connection failed.")
+        with feedback_col, st.popover("Did it work?"):
+            st.markdown("**Report an Issue**")
+            with st.form("feedback_form_inline", clear_on_submit=True):
+                fb_msg = st.text_area("What happened?", height=100)
+                fb_email = st.text_input("Your Email (Optional)")
+                if st.form_submit_button("Send Report") and fb_msg:
+                    try:
+                        payload = {"message": fb_msg, "contact": fb_email}
+                        requests.post(
+                            os.getenv(
+                                "FEEDBACK_URL",
+                                "http://127.0.0.1:8000/v1/feedback",
+                            ),
+                            json=payload,
+                            timeout=5,
+                        )
+                        st.toast("✅ Feedback sent!")
+                    except Exception:
+                        st.error("Connection failed.")
 
         if do_process:
             if text_input:
@@ -187,9 +185,7 @@ else:
                 est_minutes = round(word_count / 400, 1)
                 if est_minutes < 0.1:
                     est_minutes = "less than 1"
-                st.info(
-                    f"⏳ Processing **{word_count} words**. Expected: **{est_minutes} min**."
-                )
+                st.info(f"⏳ Processing **{word_count} words**. Expected: **{est_minutes} min**.")
                 with st.spinner("🛡️ Scrubbing text..."):
                     time.sleep(0.8)
                     clean = scrub_text_hybrid(
