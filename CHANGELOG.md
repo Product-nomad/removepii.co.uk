@@ -6,6 +6,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · [Semantic Versioning]
 
 ## [Unreleased]
 
+### Fixed
+- **Names weren't being redacted on real CVs** — the default model (`llama3.2:3b`) was returning input verbatim on ≥500-char chunks, so only the regex-phase redactions survived. Upgraded the recommended model to `llama3.1:8b` (4.9 GB, still local, still no external API calls). Latency went up (~5s → ~30s per CV) but accuracy matches expectations. Documented in `DECISIONS.md`.
+- **Student IDs were being mis-redacted as NHS numbers.** The NHS regex matched any bare 10-digit number. Tightened to require separators (`XXX XXX XXXX`) which is how NHS numbers are actually written in the wild. Bare 10-digit strings are now preserved.
+- **Dates of birth weren't being redacted.** Added a `DOB` regex pattern matching `DOB: 14/03/1988`, `Date of Birth: 14-03-1988`, etc. Preserves other dates (employment history).
+
+### Changed
+- LLM chunk size halved from 1000 → 500 chars. Smaller chunks are easier for any local model to stay on-task. Trade-off: more LLM calls, so total latency increases ~2× per document.
+- System prompt rewritten to be more prescriptive — explicit rules per PII class, "err toward redaction" guidance, explicit list of pre-existing tags to preserve.
+
+### Added
+- Regression tests for the student-ID false positive and the DOB pattern. Test count: 7 → 10.
+
 ## [0.1.0] — 2026-04-24
 
 Initial public release. Migration of the existing Windows-hosted application to Linux + Cloudflare Tunnel + systemd on the home VPC box.

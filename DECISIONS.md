@@ -2,6 +2,14 @@
 
 One paragraph per material decision, newest on top. Per §11 of `~/WAYS_OF_WORKING.md`.
 
+## 2026-04-24 — `llama3.1:8b` as the recommended local model, not `llama3.2:3b`
+
+Initial deployment used `llama3.2:3b` (2 GB, fast). Real-world test on a CV surfaced that the 3B model **echoes input verbatim** on ≥500-char chunks — classic small-model failure mode where the instruction to redact gets lost as the context grows. 500-char chunking didn't fully fix it either. Swapped to `llama3.1:8b` (4.9 GB). *Why not larger:* 70B won't run usefully on this CPU; 8B hits the accuracy vs. latency sweet spot on modest hardware. *Cost:* ~30s per CV vs. ~5s previously; acceptable for a privacy tool where correctness matters more than speed. *Knob:* `LLM_MODEL` env var is unchanged, so operators who want to swap back (or try a bigger model) don't need a code change. *Known quirk:* chunk boundaries can occasionally concatenate without a newline (`...model.Managed...`) because the chunker appends `\n` to paragraphs but `"".join(chunks)` adds nothing between chunks — cosmetic, no data-leak implication.
+
+## 2026-04-24 — NHS regex requires separators, DOB is its own class
+
+First live test surfaced two regex issues. (1) The NHS pattern matched any bare 10-digit number, so a student ID (`1234567890`) was being redacted as `[NHS-REDACTED]`. Real NHS numbers are almost always written with separators (`XXX XXX XXXX`); dropped the `|\d{10}` alternation. False-negatives on NHS-style numbers written without separators is an accepted trade. (2) DOB (`14/03/1988`) was not covered. Added a labelled-DOB regex (`DOB:` / `Date of Birth:` prefix required) to avoid redacting every employment date in a CV. Generic-date redaction stays out of scope — it would make the tool's output useless for its stated use case.
+
 ## 2026-04-24 — Reinstate the four demo license keys despite prior exposure
 
 The four original license keys (`RedactMe2026`, `recruit-101`, `law-firm-x`, `simon-admin`) were visible in the original source file on Google Drive with broad share settings and must be treated as public. They have been reinstated in `clients.json` (gitignored) at the operator's explicit request because this runs as a **demo site with no production data** — anyone guessing the keys can only see the UI and submit text they already have. *Reinstatement conditions:* none; this stands until the product takes real client data. *Rotation trigger:* first real client signs up → generate fresh keys per client, retire the four demo keys, remove/replace them in `clients.json`. *Recorded because:* the keys are structurally compromised; if someone reports unauthorised access the answer is "yes, by design" not "how did they get in."

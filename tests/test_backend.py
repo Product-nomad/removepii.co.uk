@@ -66,6 +66,29 @@ def test_nhs_number_is_redacted() -> None:
     assert "943 476 5919" not in out
 
 
+def test_bare_10_digit_number_is_not_falsely_redacted_as_nhs() -> None:
+    """Student IDs and order numbers are commonly 10 digits without separators.
+
+    The regex was tightened to require separators, so bare 10-digit numbers
+    are no longer treated as NHS numbers (regression test for the student-ID
+    false positive from the first live test).
+    """
+    out = _no_llm_scrub("Student ID: 1234567890")
+    assert "1234567890" in out  # preserved, not redacted
+    assert "[NHS-REDACTED]" not in out
+
+
+def test_dob_is_redacted() -> None:
+    out = _no_llm_scrub("DOB: 14/03/1988 and more text.")
+    assert "14/03/1988" not in out
+    assert "[DOB-REDACTED]" in out
+
+
+def test_dob_with_dashes_is_redacted() -> None:
+    out = _no_llm_scrub("Date of Birth: 14-03-1988")
+    assert "14-03-1988" not in out
+
+
 def test_removed_style_uses_single_tag() -> None:
     out = _no_llm_scrub("Email me at x@y.co.uk", style="Removed")
     assert "[REMOVED]" in out
@@ -79,5 +102,5 @@ def test_benign_text_untouched() -> None:
 
 def test_patterns_table_shape() -> None:
     labels = {label for label, _ in UK_PATTERNS}
-    for required in {"PHONE", "NHS", "EMAIL", "POSTCODE", "ADDRESS", "NINO"}:
+    for required in {"PHONE", "NHS", "DOB", "EMAIL", "POSTCODE", "ADDRESS", "NINO"}:
         assert required in labels

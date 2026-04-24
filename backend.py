@@ -69,7 +69,13 @@ def log_feedback(contact: str, message: str) -> bool:
 # --- 2. PATTERNS ---
 UK_PATTERNS: list[tuple[str, str]] = [
     ("PHONE", r"(?:(?:\+44\s?|0)(?:1|2|3|7)\d{2,4}[\s-]?\d{3,4}[\s-]?\d{3,4})"),
-    ("NHS", r"(?<!\d)(?:\d{3}[\s-]*\d{3}[\s-]*\d{4}|\d{10})(?!\d)"),
+    # NHS numbers are almost always written with a separator. Dropping the
+    # bare 10-digit alternation removes the student-ID / order-number false
+    # positive class without losing real-world NHS matches.
+    ("NHS", r"(?<!\d)\d{3}[\s-]\d{3}[\s-]\d{4}(?!\d)"),
+    # DOB: labelled date in DD/MM/YYYY, DD-MM-YYYY, or DD.MM.YYYY form. The
+    # "DOB:" prefix avoids nuking every employment-date in a CV.
+    ("DOB", r"(?i)\b(?:DOB|Date of Birth)\s*[:\-]?\s*\d{1,2}[/\-.]\d{1,2}[/\-.]\d{2,4}\b"),
     ("EMAIL", r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"),
     ("POSTCODE", r"\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b"),
     (
@@ -89,7 +95,7 @@ def get_tag(label: str, style: str) -> str:
     return f"[{label}-REDACTED]"
 
 
-def split_into_chunks(text: str, max_chars: int = 1000) -> list[str]:
+def split_into_chunks(text: str, max_chars: int = 500) -> list[str]:
     paragraphs = text.split("\n")
     chunks: list[str] = []
     current_chunk = ""
@@ -127,14 +133,19 @@ def scrub_text_hybrid(
     scrubbed_chunks: list[str] = []
     print(f"⚡ Processing {len(chunks)} chunks using AI Logic...")
 
-    system_prompt = f"""You are a GDPR Redaction Engine.
-RULES:
-0. If you find an NHS Number, replace it with {get_tag("NHS", redaction_style)}.
-1. If you find a Name, replace it with {get_tag("NAME", redaction_style)}.
-2. If you find an Address, replace it with {get_tag("ADDRESS", redaction_style)}.
-3. If you find a Phone Number, replace it with {get_tag("PHONE", redaction_style)}.
-4. Output ONLY the processed text. Do not add comments.
-5. DO NOT change existing tags like [NHS-REDACTED].
+    system_prompt = f"""You are a UK GDPR redaction engine. Redact every instance of personal information in the user's text by replacing it with a tag.
+
+Apply these rules strictly:
+- Personal names (first name, surname, or both): replace with {get_tag("NAME", redaction_style)}
+- Physical addresses and postcodes: replace with {get_tag("ADDRESS", redaction_style)}
+- Phone numbers: replace with {get_tag("PHONE", redaction_style)}
+- Email addresses: replace with {get_tag("EMAIL", redaction_style)}
+- NHS numbers: replace with {get_tag("NHS", redaction_style)}
+- Dates of birth: replace with {get_tag("DOB", redaction_style)}
+
+Preserve all other text exactly — formatting, punctuation, line breaks. Do not add explanations, preamble, or commentary. Do not modify tags that already appear in the input (e.g. [ADDRESS-REDACTED], [NAME-REDACTED], [PHONE-REDACTED], [EMAIL-REDACTED], [POSTCODE-REDACTED], [NHS-REDACTED], [DOB-REDACTED]) — keep them exactly as-is.
+
+If unsure whether a token is personal, err toward redaction.
 """
 
     for chunk in chunks:
