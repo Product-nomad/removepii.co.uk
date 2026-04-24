@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Virtualenvs
+.venv/
+venv/
+env/
+
+# Environment + secrets
+.env
+.env.*
+!.env.example
+
+# Client DB (never commit real keys)
+clients.json
+
+# Cloudflare Tunnel config + credentials (never commit)
+config.yml
+config-api.yml
+*.cloudflared.json
+cloudflared-creds-*.json
+
+# Local logs (contain no document content but client IDs are PII-adjacent)
+usage_ledger.csv
+feedback_log.csv
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+*.swp

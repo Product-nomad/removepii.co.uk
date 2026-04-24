@@ -1,0 +1,18 @@
+# Cloudflare Tunnel ingress config. Copy to ~/.cloudflared/config.yml (or
+# wherever `cloudflared` is configured to read) and fill in tunnel UUID +
+# credentials path.
+#
+# This file is committed as an EXAMPLE ONLY. The real config.yml lives outside
+# the repo and is gitignored.
+
+tunnel: YOUR_TUNNEL_UUID
+credentials-file: /etc/cloudflared/YOUR_TUNNEL_UUID.json
+
+ingress:
+  - hostname: removepii.co.uk
+    service: http://127.0.0.1:8501
+  - hostname: www.removepii.co.uk
+    service: http://127.0.0.1:8501
+  - hostname: api.removepii.co.uk
+    service: http://127.0.0.1:8000
+  - service: http_status:404

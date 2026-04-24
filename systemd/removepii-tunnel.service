@@ -1,0 +1,15 @@
+[Unit]
+Description=RemovePII Cloudflare Tunnel
+After=network.target removepii-streamlit.service
+Wants=removepii-streamlit.service
+
+[Service]
+Type=simple
+User=vpc
+Group=vpc
+ExecStart=/usr/bin/cloudflared --config /home/vpc/.cloudflared/config.yml tunnel run
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
