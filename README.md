@@ -9,7 +9,7 @@
 Live at <https://removepii.co.uk>.
 
 > v0.1 — demo site. Four demo license keys in `clients.json`; do **not** submit real personal data.
-> **CPMAI phase VI — Operationalization** (Phase V debt: no golden-set accuracy metric yet, no LLM eval). See [Governance](#governance) below.
+> **Phase: Operate** (with carry-over Validate debt: no golden-set accuracy metric yet, no LLM eval). See [Governance](#governance) below.
 
 ## Architecture
 
@@ -147,18 +147,18 @@ See `SECURITY.md` for how to report a vulnerability and `THREAT_MODEL.md` for wh
 
 ## Governance
 
-This project follows the working principles at [`~/WAYS_OF_WORKING.md`](../../WAYS_OF_WORKING.md) and the PMI CPMAI methodology.
+Where the project is, what's committed to, and the constraints we've signed up for.
 
-### CPMAI phase: VI (Operationalization, with Phase V debt)
+### Phase: Operate (with carry-over Validate debt)
 
 | Phase | Status | Artefact |
 |---|---|---|
-| I. Business Understanding | ✅ complete | `THREAT_MODEL.md`, this README |
-| II. Data Understanding | ✅ complete | UK PII taxonomy documented in `backend.py` |
-| III. Data Preparation | ✅ complete | `UK_PATTERNS` regex table |
-| IV. Model Development | ✅ complete | Hybrid regex + local-LLM pipeline |
-| V. Model Evaluation | 🟡 partial | 7 regex unit tests (LLM mocked); **no golden-set accuracy measurement** |
-| VI. Model Operationalization | ✅ live | Cloudflare Tunnel + systemd on home VPC; auto-restart; 4 redundant edge connections |
+| Frame | ✅ complete | Threat model in this repo, this README |
+| Data | ✅ complete | UK PII taxonomy documented in `backend.py` |
+| Pipeline | ✅ complete | `UK_PATTERNS` regex table |
+| Build | ✅ complete | Hybrid regex + local-LLM pipeline |
+| Validate | 🟡 partial | 7 regex unit tests (LLM mocked); **no golden-set accuracy measurement** |
+| Operate | ✅ live | Cloudflare Tunnel + systemd on home VPC; auto-restart; 4 redundant edge connections |
 
 ### Value metrics (next to measure)
 
